@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { Person } from '../types/Person';
 import { loadPeople, savePeople, generateId } from '../utils/storage';
@@ -32,15 +33,11 @@ export const FamilyProvider: React.FC<FamilyProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const savedPeople = loadPeople();
-    console.log('Loading people from localStorage:', savedPeople);
     setPeople(savedPeople);
   }, []);
 
   useEffect(() => {
-    if (people.length > 0) {
-      console.log('Saving people to localStorage:', people);
-      savePeople(people);
-    }
+    savePeople(people);
   }, [people]);
 
   const addPerson = (personData: Omit<Person, 'id'>) => {
@@ -70,22 +67,24 @@ export const FamilyProvider: React.FC<FamilyProviderProps> = ({ children }) => {
   };
 
   const addRelationship = (personId: string, relatedPersonId: string, type: 'parent' | 'spouse' | 'child') => {
+    if (personId === relatedPersonId) return;
+
     setPeople(prev => prev.map(person => {
       if (person.id === personId) {
-        if (type === 'parent') {
+        if (type === 'parent' && !person.parentIds.includes(relatedPersonId)) {
           return { ...person, parentIds: [...person.parentIds, relatedPersonId] };
-        } else if (type === 'spouse') {
+        } else if (type === 'spouse' && !person.spouseIds.includes(relatedPersonId)) {
           return { ...person, spouseIds: [...person.spouseIds, relatedPersonId] };
-        } else if (type === 'child') {
+        } else if (type === 'child' && !person.childrenIds.includes(relatedPersonId)) {
           return { ...person, childrenIds: [...person.childrenIds, relatedPersonId] };
         }
       }
       if (person.id === relatedPersonId) {
-        if (type === 'parent') {
+        if (type === 'parent' && !person.childrenIds.includes(personId)) {
           return { ...person, childrenIds: [...person.childrenIds, personId] };
-        } else if (type === 'spouse') {
+        } else if (type === 'spouse' && !person.spouseIds.includes(personId)) {
           return { ...person, spouseIds: [...person.spouseIds, personId] };
-        } else if (type === 'child') {
+        } else if (type === 'child' && !person.parentIds.includes(personId)) {
           return { ...person, parentIds: [...person.parentIds, personId] };
         }
       }
