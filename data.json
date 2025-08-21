@@ -1,0 +1,20 @@
+{
+  "members": [
+    {
+      "id": "9991dc51-a686-4058-88f7-cda9a7316e5a",
+      "name": "Parent",
+      "birthYear": 1980
+    },
+    {
+      "id": "7c171159-a7b3-4714-b0d3-8121f9a61d97",
+      "name": "Child",
+      "birthYear": 2010
+    }
+  ],
+  "relations": [
+    {
+      "parentId": "9991dc51-a686-4058-88f7-cda9a7316e5a",
+      "childId": "7c171159-a7b3-4714-b0d3-8121f9a61d97"
+    }
+  ]
+}

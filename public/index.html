@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Tree</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Family Tree</h1>
+  <section>
+    <h2>Add Person</h2>
+    <form id="member-form">
+      <input type="text" id="name" placeholder="Name" required />
+      <input type="number" id="birthYear" placeholder="Birth Year" required />
+      <button type="submit">Add</button>
+    </form>
+  </section>
+  <section>
+    <h2>Add Relation</h2>
+    <form id="relation-form">
+      <input type="text" id="parentId" placeholder="Parent ID" required />
+      <input type="text" id="childId" placeholder="Child ID" required />
+      <button type="submit">Link</button>
+    </form>
+  </section>
+  <section>
+    <h2>Tree</h2>
+    <div id="tree"></div>
+  </section>
+  <script src="script.js"></script>
+</body>
+</html>
