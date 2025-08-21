@@ -11,6 +11,7 @@ export const PersonForm: React.FC<PersonFormProps> = ({ person, onSubmit, onCanc
   const [formData, setFormData] = useState({
     firstName: person?.firstName || '',
     lastName: person?.lastName || '',
+    gender: person?.gender || 'other',
     birthDate: person?.birthDate || '',
     deathDate: person?.deathDate || '',
     notes: person?.notes || '',
@@ -56,7 +57,7 @@ export const PersonForm: React.FC<PersonFormProps> = ({ person, onSubmit, onCanc
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
@@ -103,12 +104,12 @@ export const PersonForm: React.FC<PersonFormProps> = ({ person, onSubmit, onCanc
         
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Name fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-2">
-                First Name *
-              </label>
+            {/* Name fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-2">
+                  First Name *
+                </label>
               <input
                 type="text"
                 id="firstName"
@@ -163,8 +164,26 @@ export const PersonForm: React.FC<PersonFormProps> = ({ person, onSubmit, onCanc
                   {errors.lastName}
                 </p>
               )}
+              </div>
             </div>
-          </div>
+
+            {/* Gender field */}
+            <div>
+              <label htmlFor="gender" className="block text-sm font-semibold text-gray-700 mb-2">
+                Gender
+              </label>
+              <select
+                id="gender"
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-20 focus:border-blue-500 bg-gray-50 focus:bg-white transition-all duration-200"
+              >
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
 
           {/* Date fields */}
           <div className="grid grid-cols-2 gap-4">

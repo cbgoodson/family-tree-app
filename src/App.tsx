@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { FamilyProvider, useFamilyContext } from './context/FamilyContext';
-import { PersonForm } from './components/PersonForm';
+import { FamilyProvider } from './context/FamilyContext';
 import { RelationshipManager } from './components/RelationshipManager';
 import { FamilyTree } from './components/FamilyTree';
 import Sidebar from './components/Sidebar';
@@ -11,14 +10,14 @@ const FamilyTreeApp: React.FC = () => {
   const [relationshipPerson, setRelationshipPerson] = useState<Person | undefined>();
 
   React.useEffect(() => {
-    const handleManageRelationshipsEvent = (event: any) => {
+    const handleManageRelationshipsEvent = (event: CustomEvent<Person>) => {
       setRelationshipPerson(event.detail);
     };
 
-    window.addEventListener('manageRelationships', handleManageRelationshipsEvent);
+    window.addEventListener('manageRelationships', handleManageRelationshipsEvent as EventListener);
 
     return () => {
-      window.removeEventListener('manageRelationships', handleManageRelationshipsEvent);
+      window.removeEventListener('manageRelationships', handleManageRelationshipsEvent as EventListener);
     };
   }, []);
 

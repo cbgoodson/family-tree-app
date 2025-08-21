@@ -11,6 +11,7 @@ export const PersonFormInline: React.FC<PersonFormInlineProps> = ({ person, onSu
   const [formData, setFormData] = useState({
     firstName: person?.firstName || '',
     lastName: person?.lastName || '',
+    gender: person?.gender || 'other',
     birthDate: person?.birthDate || '',
     deathDate: person?.deathDate || '',
     notes: person?.notes || '',
@@ -23,18 +24,19 @@ export const PersonFormInline: React.FC<PersonFormInlineProps> = ({ person, onSu
 
   useEffect(() => {
     if (person) {
-      setFormData({
-        firstName: person.firstName || '',
-        lastName: person.lastName || '',
-        birthDate: person.birthDate || '',
-        deathDate: person.deathDate || '',
-        notes: person.notes || '',
-        parentIds: person.parentIds || [],
-        spouseIds: person.spouseIds || [],
-        childrenIds: person.childrenIds || [],
-      });
-    }
-  }, [person]);
+        setFormData({
+          firstName: person.firstName || '',
+          lastName: person.lastName || '',
+          gender: person.gender || 'other',
+          birthDate: person.birthDate || '',
+          deathDate: person.deathDate || '',
+          notes: person.notes || '',
+          parentIds: person.parentIds || [],
+          spouseIds: person.spouseIds || [],
+          childrenIds: person.childrenIds || [],
+        });
+      }
+    }, [person]);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -66,7 +68,7 @@ export const PersonFormInline: React.FC<PersonFormInlineProps> = ({ person, onSu
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
@@ -79,11 +81,11 @@ export const PersonFormInline: React.FC<PersonFormInlineProps> = ({ person, onSu
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Name fields */}
-        <div>
-          <label htmlFor="firstName" className="block text-xs font-medium text-gray-700 mb-1">
-            First Name *
-          </label>
+          {/* Name fields */}
+          <div>
+            <label htmlFor="firstName" className="block text-xs font-medium text-gray-700 mb-1">
+              First Name *
+            </label>
           <input
             type="text"
             id="firstName"
@@ -103,12 +105,12 @@ export const PersonFormInline: React.FC<PersonFormInlineProps> = ({ person, onSu
           {errors.firstName && (
             <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>
           )}
-        </div>
+          </div>
 
-        <div>
-          <label htmlFor="lastName" className="block text-xs font-medium text-gray-700 mb-1">
-            Last Name *
-          </label>
+          <div>
+            <label htmlFor="lastName" className="block text-xs font-medium text-gray-700 mb-1">
+              Last Name *
+            </label>
           <input
             type="text"
             id="lastName"
@@ -125,16 +127,34 @@ export const PersonFormInline: React.FC<PersonFormInlineProps> = ({ person, onSu
             `}
             placeholder="Enter last name"
           />
-          {errors.lastName && (
-            <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>
-          )}
-        </div>
+            {errors.lastName && (
+              <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>
+            )}
+          </div>
+
+          {/* Gender field */}
+          <div>
+            <label htmlFor="gender" className="block text-xs font-medium text-gray-700 mb-1">
+              Gender
+            </label>
+            <select
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20 focus:border-blue-500 bg-white transition-colors"
+            >
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
 
         {/* Date fields */}
-        <div>
-          <label htmlFor="birthDate" className="block text-xs font-medium text-gray-700 mb-1">
-            Birth Date
-          </label>
+          <div>
+            <label htmlFor="birthDate" className="block text-xs font-medium text-gray-700 mb-1">
+              Birth Date
+            </label>
           <input
             type="date"
             id="birthDate"

@@ -10,7 +10,7 @@ import {
   MarkerType,
   ReactFlowProvider,
 } from '@xyflow/react';
-import type { Node, Edge } from '@xyflow/react';
+import type { Node, Edge, ReactFlowInstance } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { Person } from '../types/Person';
 import { useFamilyContext } from '../context/FamilyContext';
@@ -33,10 +33,10 @@ const edgeTypes = {
 
 const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
   const { people, getPersonById } = useFamilyContext();
-  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance<Node<PersonNodeData>, Edge> | null>(null);
 
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
-    const nodes: any[] = [];
+    const nodes: Node<PersonNodeData>[] = [];
     const edges: Edge[] = [];
     const nodePositions = new Map<string, { x: number; y: number }>();
 
@@ -145,10 +145,10 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
     return { nodes, edges };
   }, [people, focusPersonId, getPersonById]);
 
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [nodes, , onNodesChange] = useNodesState<Node<PersonNodeData>>(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
-  const onInit = useCallback((instance: any) => {
+  const onInit = useCallback((instance: ReactFlowInstance<Node<PersonNodeData>, Edge>) => {
     setReactFlowInstance(instance);
     setTimeout(() => {
       instance.fitView({ padding: 0.2 });

@@ -33,23 +33,35 @@ const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
 
   const age = calculateAge(person);
 
-  return (
-    <div 
-      className={`
-        bg-white border-2 rounded-xl p-3 shadow-lg min-w-[200px] max-w-[220px]
-        transition-all duration-200
-        ${selected ? 'border-blue-500 shadow-blue-200' : 'border-gray-200 hover:border-blue-300'}
-        ${person.deathDate ? 'opacity-75' : ''}
-      `}
-    >
+    const borderClasses = person.gender === 'female'
+      ? selected ? 'border-pink-500 shadow-pink-200' : 'border-pink-300 hover:border-pink-400'
+      : person.gender === 'male'
+        ? selected ? 'border-blue-500 shadow-blue-200' : 'border-blue-300 hover:border-blue-400'
+        : selected ? 'border-gray-500 shadow-gray-200' : 'border-gray-300 hover:border-gray-400';
+
+    const avatarClasses = person.gender === 'female'
+      ? 'bg-pink-100 text-pink-500'
+      : person.gender === 'male'
+        ? 'bg-blue-100 text-blue-500'
+        : 'bg-gray-100 text-gray-500';
+
+    return (
+      <div
+        className={`
+          bg-white border-2 rounded-xl p-3 shadow-lg min-w-[200px] max-w-[220px]
+          transition-all duration-200
+          ${borderClasses}
+          ${person.deathDate ? 'opacity-75' : ''}
+        `}
+      >
       {/* Handles for connections */}
       <Handle type="target" position={Position.Top} className="w-3 h-3" />
       <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
       
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100">
-          <UserIcon size={20} className="text-blue-500" />
-        </div>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${avatarClasses}`}>
+            <UserIcon size={20} />
+          </div>
         
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-gray-900 truncate">

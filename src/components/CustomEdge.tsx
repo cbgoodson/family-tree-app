@@ -1,5 +1,5 @@
 import React from 'react';
-import { getBezierPath } from '@xyflow/react';
+import { getBezierPath, Position } from '@xyflow/react';
 
 interface CustomEdgeProps {
   id: string;
@@ -7,8 +7,8 @@ interface CustomEdgeProps {
   sourceY: number;
   targetX: number;
   targetY: number;
-  sourcePosition: any;
-  targetPosition: any;
+  sourcePosition: Position;
+  targetPosition: Position;
   style?: React.CSSProperties;
   markerEnd?: string;
 }
