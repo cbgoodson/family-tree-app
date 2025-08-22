@@ -30,15 +30,19 @@ interface FamilyProviderProps {
 
 export const FamilyProvider: React.FC<FamilyProviderProps> = ({ children }) => {
   const [people, setPeople] = useState<Person[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const savedPeople = loadPeople();
     setPeople(savedPeople);
+    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
-    savePeople(people);
-  }, [people]);
+    if (isLoaded) {
+      savePeople(people);
+    }
+  }, [people, isLoaded]);
 
   const addPerson = (personData: Omit<Person, 'id'>) => {
     const newPerson: Person = {

@@ -1,11 +1,12 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { EditIcon, UserIcon } from 'lucide-react';
+import { EditIcon, UserIcon, UsersIcon } from 'lucide-react';
 import type { Person } from '../types/Person';
 
 export interface PersonNodeData extends Record<string, unknown> {
   person: Person;
   onEdit?: (person: Person) => void;
+  onManageRelationships?: (person: Person) => void;
 }
 
 interface PersonNodeProps {
@@ -14,12 +15,19 @@ interface PersonNodeProps {
 }
 
 const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
-  const { person, onEdit } = data;
+  const { person, onEdit, onManageRelationships } = data;
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onEdit) {
       onEdit(person);
+    }
+  };
+
+  const handleManageRelationships = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onManageRelationships) {
+      onManageRelationships(person);
     }
   };
 
@@ -81,14 +89,26 @@ const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
           )}
         </div>
         
-        {onEdit && (
-          <button
-            onClick={handleEdit}
-            className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full flex-shrink-0"
-          >
-            <EditIcon size={14} />
-          </button>
-        )}
+        <div className="flex gap-1">
+          {onManageRelationships && (
+            <button
+              onClick={handleManageRelationships}
+              className="p-1 text-gray-400 hover:text-purple-500 hover:bg-purple-50 rounded-full flex-shrink-0"
+              title="Manage relationships"
+            >
+              <UsersIcon size={14} />
+            </button>
+          )}
+          {onEdit && (
+            <button
+              onClick={handleEdit}
+              className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full flex-shrink-0"
+              title="Edit person"
+            >
+              <EditIcon size={14} />
+            </button>
+          )}
+        </div>
       </div>
       
       {person.notes && selected && (

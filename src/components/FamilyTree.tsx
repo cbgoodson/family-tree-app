@@ -103,6 +103,9 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
           onEdit: (person: Person) => {
             window.dispatchEvent(new CustomEvent('editPerson', { detail: person }));
           },
+          onManageRelationships: (person: Person) => {
+            window.dispatchEvent(new CustomEvent('manageRelationships', { detail: person }));
+          },
         },
       });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Person } from '../types/Person';
 import { useFamilyContext } from '../context/FamilyContext';
 
@@ -13,9 +13,24 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
   const [relationshipType, setRelationshipType] = useState<'parent' | 'spouse' | 'child'>('parent');
   const [isAnimating, setIsAnimating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsAnimating(true);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const availablePeople = people.filter(p => {
@@ -37,6 +52,7 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
       addRelationship(person.id, selectedPersonId, relationshipType);
       setSelectedPersonId('');
       setSearchTerm('');
+      setShowDropdown(false);
     }
   };
 
@@ -88,151 +104,126 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-      <div 
-        className={`
-          bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden
-          transform transition-all duration-300
-          ${isAnimating ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}
-        `}
-      >
+      <div className={`bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden ${isAnimating ? 'scale-100 opacity-100' : 'scale-95 opacity-0'} transition-all duration-300`}>
+        
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-1">
-                Family Relationships
-              </h2>
-              <p className="text-indigo-100 text-sm">
-                Managing relationships for <span className="font-semibold">{person.firstName} {person.lastName}</span>
-              </p>
-            </div>
-            <button
-              onClick={handleClose}
-              className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200"
-            >
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div className="bg-blue-600 px-6 py-4 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-bold text-white">Manage Relationships</h2>
+            <p className="text-blue-100 text-sm">{person.firstName} {person.lastName}</p>
           </div>
+          <button
+            onClick={handleClose}
+            className="text-white hover:text-gray-200 p-1"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(90vh-140px)]">
-          {/* Add relationship section */}
-          <div className="p-6 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
-            <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add New Relationship
-            </h3>
+        <div className="overflow-y-auto max-h-[calc(90vh-200px)]">
+          {/* Add relationship form */}
+          <div className="p-6 border-b">
+            <h3 className="font-semibold text-lg mb-4">Add New Relationship</h3>
             
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-              {/* Person search/select */}
-              <div className="lg:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Select Person
-                </label>
+            <div className="space-y-4">
+              {/* Search input */}
+              <div ref={searchRef}>
+                <label className="block text-sm font-medium mb-1">Select Person</label>
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search by name..."
+                    placeholder="Type to search..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-20 focus:border-blue-500 bg-white transition-all duration-200"
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setShowDropdown(e.target.value.length > 0);
+                      setSelectedPersonId('');
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  <svg className="absolute right-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  
+                  {showDropdown && searchTerm && (
+                    <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                      {filteredPeople.map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedPersonId(p.id);
+                            setSearchTerm(`${p.firstName} ${p.lastName}`);
+                            setShowDropdown(false);
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-gray-100 border-b last:border-b-0"
+                        >
+                          {p.firstName} {p.lastName}
+                          {p.birthDate && (
+                            <span className="text-xs text-gray-500 ml-2">
+                              (Born {new Date(p.birthDate).getFullYear()})
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                      {filteredPeople.length === 0 && (
+                        <div className="px-3 py-2 text-gray-500 text-sm">No people found</div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                
-                {searchTerm && (
-                  <div className="mt-2 max-h-32 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                    {filteredPeople.map(p => (
-                      <button
-                        key={p.id}
-                        onClick={() => {
-                          setSelectedPersonId(p.id);
-                          setSearchTerm(`${p.firstName} ${p.lastName}`);
-                        }}
-                        className="w-full px-4 py-2 text-left hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors duration-150"
-                      >
-                        {p.firstName} {p.lastName}
-                      </button>
-                    ))}
-                    {filteredPeople.length === 0 && (
-                      <div className="px-4 py-2 text-gray-500 text-sm">No people found</div>
-                    )}
-                  </div>
-                )}
               </div>
-              
-              {/* Relationship type */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Relationship Type
-                </label>
-                <select
-                  value={relationshipType}
-                  onChange={(e) => setRelationshipType(e.target.value as 'parent' | 'spouse' | 'child')}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-20 focus:border-blue-500 bg-white transition-all duration-200"
-                >
-                  <option value="parent">Parent</option>
-                  <option value="spouse">Spouse</option>
-                  <option value="child">Child</option>
-                </select>
-              </div>
-              
-              {/* Add button */}
-              <div className="flex items-end">
-                <button
-                  onClick={handleAddRelationship}
-                  disabled={!selectedPersonId}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-xl hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none flex items-center justify-center gap-2"
-                >
-                  {getRelationshipIcon(relationshipType)}
-                  Add Relationship
-                </button>
+
+              {/* Relationship type and button */}
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-1">Relationship</label>
+                  <select
+                    value={relationshipType}
+                    onChange={(e) => setRelationshipType(e.target.value as 'parent' | 'spouse' | 'child')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="parent">Parent</option>
+                    <option value="spouse">Spouse</option>
+                    <option value="child">Child</option>
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={handleAddRelationship}
+                    disabled={!selectedPersonId}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Relationships display */}
-          <div className="p-6 space-y-8">
+          {/* Current relationships */}
+          <div className="p-6 space-y-4">
             {/* Parents */}
             <div>
-              <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                {getRelationshipIcon('parent')}
-                Parents
-                <span className="text-sm font-normal text-gray-500">({getRelatedPeople(person.parentIds).length})</span>
-              </h3>
+              <h4 className="font-medium text-gray-800 mb-2">Parents ({getRelatedPeople(person.parentIds).length})</h4>
               {getRelatedPeople(person.parentIds).length === 0 ? (
-                <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                  <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <p className="text-gray-500">No parents added yet</p>
-                </div>
+                <p className="text-gray-500 text-sm">No parents added</p>
               ) : (
-                <div className="grid gap-3">
+                <div className="space-y-2">
                   {getRelatedPeople(person.parentIds).map(parent => (
-                    <div key={parent.id} className={`flex justify-between items-center p-4 bg-gradient-to-r ${getRelationshipColor('parent')} rounded-xl border-2 transition-all duration-200 hover:shadow-md`}>
-                      <div className="flex items-center gap-3">
-                        {getRelationshipIcon('parent')}
-                        <div>
-                          <span className="font-semibold text-gray-800">{parent.firstName} {parent.lastName}</span>
-                          {parent.birthDate && (
-                            <p className="text-sm text-gray-600">Born {new Date(parent.birthDate).getFullYear()}</p>
-                          )}
-                        </div>
+                    <div key={parent.id} className="flex justify-between items-center p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <div>
+                        <span className="font-medium">{parent.firstName} {parent.lastName}</span>
+                        {parent.birthDate && (
+                          <span className="text-sm text-gray-600 ml-2">Born {new Date(parent.birthDate).getFullYear()}</span>
+                        )}
                       </div>
                       <button
                         onClick={() => handleRemoveRelationship(parent.id)}
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors duration-200"
-                        title="Remove relationship"
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Remove"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     </div>
@@ -243,38 +234,26 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
 
             {/* Spouses */}
             <div>
-              <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                {getRelationshipIcon('spouse')}
-                Spouses
-                <span className="text-sm font-normal text-gray-500">({getRelatedPeople(person.spouseIds).length})</span>
-              </h3>
+              <h4 className="font-medium text-gray-800 mb-2">Spouses ({getRelatedPeople(person.spouseIds).length})</h4>
               {getRelatedPeople(person.spouseIds).length === 0 ? (
-                <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                  <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                  </svg>
-                  <p className="text-gray-500">No spouses added yet</p>
-                </div>
+                <p className="text-gray-500 text-sm">No spouses added</p>
               ) : (
-                <div className="grid gap-3">
+                <div className="space-y-2">
                   {getRelatedPeople(person.spouseIds).map(spouse => (
-                    <div key={spouse.id} className={`flex justify-between items-center p-4 bg-gradient-to-r ${getRelationshipColor('spouse')} rounded-xl border-2 transition-all duration-200 hover:shadow-md`}>
-                      <div className="flex items-center gap-3">
-                        {getRelationshipIcon('spouse')}
-                        <div>
-                          <span className="font-semibold text-gray-800">{spouse.firstName} {spouse.lastName}</span>
-                          {spouse.birthDate && (
-                            <p className="text-sm text-gray-600">Born {new Date(spouse.birthDate).getFullYear()}</p>
-                          )}
-                        </div>
+                    <div key={spouse.id} className="flex justify-between items-center p-3 bg-pink-50 border border-pink-200 rounded-md">
+                      <div>
+                        <span className="font-medium">{spouse.firstName} {spouse.lastName}</span>
+                        {spouse.birthDate && (
+                          <span className="text-sm text-gray-600 ml-2">Born {new Date(spouse.birthDate).getFullYear()}</span>
+                        )}
                       </div>
                       <button
                         onClick={() => handleRemoveRelationship(spouse.id)}
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors duration-200"
-                        title="Remove relationship"
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Remove"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     </div>
@@ -285,38 +264,26 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
 
             {/* Children */}
             <div>
-              <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                {getRelationshipIcon('child')}
-                Children
-                <span className="text-sm font-normal text-gray-500">({getRelatedPeople(person.childrenIds).length})</span>
-              </h3>
+              <h4 className="font-medium text-gray-800 mb-2">Children ({getRelatedPeople(person.childrenIds).length})</h4>
               {getRelatedPeople(person.childrenIds).length === 0 ? (
-                <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                  <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <p className="text-gray-500">No children added yet</p>
-                </div>
+                <p className="text-gray-500 text-sm">No children added</p>
               ) : (
-                <div className="grid gap-3">
+                <div className="space-y-2">
                   {getRelatedPeople(person.childrenIds).map(child => (
-                    <div key={child.id} className={`flex justify-between items-center p-4 bg-gradient-to-r ${getRelationshipColor('child')} rounded-xl border-2 transition-all duration-200 hover:shadow-md`}>
-                      <div className="flex items-center gap-3">
-                        {getRelationshipIcon('child')}
-                        <div>
-                          <span className="font-semibold text-gray-800">{child.firstName} {child.lastName}</span>
-                          {child.birthDate && (
-                            <p className="text-sm text-gray-600">Born {new Date(child.birthDate).getFullYear()}</p>
-                          )}
-                        </div>
+                    <div key={child.id} className="flex justify-between items-center p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <div>
+                        <span className="font-medium">{child.firstName} {child.lastName}</span>
+                        {child.birthDate && (
+                          <span className="text-sm text-gray-600 ml-2">Born {new Date(child.birthDate).getFullYear()}</span>
+                        )}
                       </div>
                       <button
                         onClick={() => handleRemoveRelationship(child.id)}
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors duration-200"
-                        title="Remove relationship"
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Remove"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     </div>
@@ -328,12 +295,12 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-gray-50 border-t border-gray-200">
+        <div className="p-4 bg-gray-50 border-t">
           <button
             onClick={handleClose}
-            className="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white py-3 px-4 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="w-full bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700"
           >
-            Done Managing Relationships
+            Done
           </button>
         </div>
       </div>
