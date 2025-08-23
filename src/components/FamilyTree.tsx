@@ -200,6 +200,8 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
 
   const handleReorganize = () => {
     if (reactFlowInstance) {
+      // Force re-render of nodes with new positions by updating the nodes
+      setNodes(initialNodes);
       setTimeout(() => {
         reactFlowInstance.fitView({ padding: 0.2 });
       }, 100);
@@ -250,28 +252,28 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
         <Panel position="top-right" className="flex gap-2">
           <button 
             onClick={handleZoomIn} 
-            className="p-2 bg-white rounded-full shadow hover:bg-gray-100" 
+            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 cursor-pointer" 
             title="Zoom in"
           >
             <ZoomInIcon size={20} />
           </button>
           <button 
             onClick={handleZoomOut} 
-            className="p-2 bg-white rounded-full shadow hover:bg-gray-100" 
+            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 cursor-pointer" 
             title="Zoom out"
           >
             <ZoomOutIcon size={20} />
           </button>
           <button 
             onClick={handleFitView} 
-            className="p-2 bg-white rounded-full shadow hover:bg-gray-100" 
+            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 cursor-pointer" 
             title="Fit view"
           >
             <HomeIcon size={20} />
           </button>
           <button 
             onClick={handleReorganize} 
-            className="p-2 bg-white rounded-full shadow hover:bg-gray-100" 
+            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 cursor-pointer" 
             title="Reorganize tree"
           >
             <RefreshCwIcon size={20} />

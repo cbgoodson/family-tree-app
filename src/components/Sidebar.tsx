@@ -1,27 +1,28 @@
 import React, { useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon, UsersIcon, PlusIcon, UserPlusIcon, LinkIcon, EditIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, UsersIcon, PlusIcon, UserPlusIcon, LinkIcon, EditIcon, TrashIcon } from 'lucide-react';
 import { PersonFormInline } from './PersonFormInline';
-import { RelationshipManager } from './RelationshipManager';
 import { useFamilyContext } from '../context/FamilyContext';
 import type { Person } from '../types/Person';
 
 type SidebarProps = {
   isOpen: boolean;
   toggleSidebar: () => void;
+  onOpenRelationshipManager: (person: Person) => void;
 };
 
 type TabType = 'people' | 'add-person' | 'add-relationship';
 
 const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
-  toggleSidebar
+  toggleSidebar,
+  onOpenRelationshipManager
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('people');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | undefined>();
-  const [relationshipPerson, setRelationshipPerson] = useState<Person | undefined>();
+  
 
-  const { people, addPerson, updatePerson } = useFamilyContext();
+  const { people, addPerson, updatePerson, deletePerson } = useFamilyContext();
 
   // Listen for edit person events from tree nodes
     React.useEffect(() => {
@@ -30,10 +31,17 @@ const Sidebar: React.FC<SidebarProps> = ({
         handleTabChange('add-person');
       };
 
+      const handleManageRelationshipsEvent = (event: CustomEvent<Person>) => {
+        // Use callback to open relationship manager
+        onOpenRelationshipManager(event.detail);
+      };
+
       window.addEventListener('editPerson', handleEditPersonEvent as EventListener);
+      window.addEventListener('manageRelationships', handleManageRelationshipsEvent as EventListener);
 
       return () => {
         window.removeEventListener('editPerson', handleEditPersonEvent as EventListener);
+        window.removeEventListener('manageRelationships', handleManageRelationshipsEvent as EventListener);
       };
   }, []);
 
@@ -42,15 +50,26 @@ const Sidebar: React.FC<SidebarProps> = ({
     if (tab !== 'add-person') {
       setEditingPerson(undefined);
     }
-    if (tab !== 'add-relationship') {
-      setRelationshipPerson(undefined);
-    }
   };
 
   const handleEditPerson = (person: Person, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingPerson(person);
     handleTabChange('add-person');
+  };
+
+  const handleDeletePerson = (person: Person, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`Are you sure you want to delete ${person.firstName} ${person.lastName}? This will also remove all their relationships.`)) {
+      deletePerson(person.id);
+      if (selectedPerson?.id === person.id) {
+        setSelectedPerson(null);
+      }
+      if (editingPerson?.id === person.id) {
+        setEditingPerson(undefined);
+        handleTabChange('people');
+      }
+    }
   };
 
   const handleFormSubmit = (personData: Omit<Person, 'id'>) => {
@@ -75,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleAddRelationship = () => {
     if (selectedPerson) {
-      setRelationshipPerson(selectedPerson);
+      onOpenRelationshipManager(selectedPerson);
       handleTabChange('add-relationship');
     }
   };
@@ -112,19 +131,29 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </p>
                       )}
                     </div>
-                    <button
-                      onClick={(e) => handleEditPerson(person, e)}
-                      className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full"
-                    >
-                      <EditIcon size={16} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={(e) => handleEditPerson(person, e)}
+                        className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full cursor-pointer"
+                        title="Edit person"
+                      >
+                        <EditIcon size={16} />
+                      </button>
+                      <button
+                        onClick={(e) => handleDeletePerson(person, e)}
+                        className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full cursor-pointer"
+                        title="Delete person"
+                      >
+                        <TrashIcon size={16} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
 
             <button
-              className="w-full mt-4 py-2 flex items-center justify-center gap-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md border border-blue-200"
+              className="w-full mt-4 py-2 flex items-center justify-center gap-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md border border-blue-200 cursor-pointer"
               onClick={handleAddPersonTab}
             >
               <PlusIcon size={16} />
@@ -133,7 +162,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
             {selectedPerson && (
               <button
-                className="w-full mt-2 py-2 flex items-center justify-center gap-2 text-sm text-green-600 hover:bg-green-50 rounded-md border border-green-200"
+                className="w-full mt-2 py-2 flex items-center justify-center gap-2 text-sm text-green-600 hover:bg-green-50 rounded-md border border-green-200 cursor-pointer"
                 onClick={handleAddRelationship}
               >
                 <LinkIcon size={16} />
@@ -153,8 +182,36 @@ const Sidebar: React.FC<SidebarProps> = ({
         );
 
       case 'add-relationship':
+        if (selectedPerson) {
+          return (
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <h3 className="font-medium text-blue-800">Managing relationships for:</h3>
+                <p className="text-blue-700">{selectedPerson.firstName} {selectedPerson.lastName}</p>
+              </div>
+              <button
+                onClick={() => {
+                  if (selectedPerson) {
+                    onOpenRelationshipManager(selectedPerson);
+                  }
+                }}
+                className="w-full py-3 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium cursor-pointer"
+              >
+                Open Relationship Manager
+              </button>
+            </div>
+          );
+        }
         return (
-          <p className="text-sm text-gray-500">Select a person to manage relationships.</p>
+          <div className="text-center space-y-4">
+            <p className="text-sm text-gray-500">Select a person from the People tab to manage their relationships.</p>
+            <button
+              onClick={() => handleTabChange('people')}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              Go to People
+            </button>
+          </div>
         );
 
       default:
@@ -164,18 +221,21 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      <div className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-transform duration-300 z-40 w-80 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div 
+        className={`fixed top-0 h-full bg-white shadow-lg transition-all duration-300 z-40 w-80`}
+        style={{ left: isOpen ? '0' : '-320px' }}
+      >
         <div className="flex flex-col h-full">
           <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-800">Family Tree</h2>
-            <button onClick={toggleSidebar} className="p-1 rounded hover:bg-gray-200">
+            <button onClick={toggleSidebar} className="p-1 rounded hover:bg-gray-200 cursor-pointer">
               <ChevronLeftIcon size={20} />
             </button>
           </div>
           
           <div className="flex border-b border-gray-200">
             <button
-              className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'people' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 py-3 px-4 text-sm font-medium cursor-pointer ${activeTab === 'people' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
               onClick={() => handleTabChange('people')}
             >
               <div className="flex items-center justify-center gap-2">
@@ -185,7 +245,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
             
             <button
-              className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'add-person' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 py-3 px-4 text-sm font-medium cursor-pointer ${activeTab === 'add-person' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
               onClick={handleAddPersonTab}
             >
               <div className="flex items-center justify-center gap-2">
@@ -195,7 +255,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
             
             <button
-              className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'add-relationship' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 py-3 px-4 text-sm font-medium cursor-pointer ${activeTab === 'add-relationship' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
               onClick={() => handleTabChange('add-relationship')}
             >
               <div className="flex items-center justify-center gap-2">
@@ -214,19 +274,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       {!isOpen && (
         <button 
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 border border-gray-200"
+          className="fixed top-4 left-4 z-50 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 border border-gray-200 cursor-pointer"
         >
           <ChevronRightIcon size={20} />
         </button>
       )}
 
-      {/* Render RelationshipManager as a separate modal outside sidebar */}
-      {relationshipPerson && (
-        <RelationshipManager
-          person={relationshipPerson}
-          onClose={() => handleTabChange('people')}
-        />
-      )}
     </>
   );
 };

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import type { Person } from '../types/Person';
 import { useFamilyContext } from '../context/FamilyContext';
 
@@ -12,7 +11,7 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
   const { people, addRelationship, removeRelationship, getPersonById } = useFamilyContext();
   const [selectedPersonId, setSelectedPersonId] = useState('');
   const [relationshipType, setRelationshipType] = useState<'parent' | 'spouse' | 'child'>('parent');
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(true); // Start as true for immediate visibility
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -73,18 +72,18 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
   };
 
   const modalContent = (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-      <div className={`bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden ${isAnimating ? 'scale-100 opacity-100' : 'scale-95 opacity-0'} transition-all duration-300`}>
+    <div className={`bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden ${isAnimating ? 'scale-100 opacity-100' : 'scale-95 opacity-0'} transition-all duration-300 border border-gray-200`}>
         
         {/* Header */}
-        <div className="bg-blue-600 px-6 py-4 flex justify-between items-center">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-bold text-white">Manage Relationships</h2>
             <p className="text-blue-100 text-sm">{person.firstName} {person.lastName}</p>
           </div>
           <button
             onClick={handleClose}
-            className="text-white hover:text-gray-200 p-1"
+            className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all duration-200 cursor-pointer"
+            title="Close"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -92,9 +91,9 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
           </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="overflow-y-auto max-h-[calc(85vh-180px)]">
           {/* Add relationship form */}
-          <div className="p-6 border-b">
+          <div className="p-6 border-b border-gray-100 bg-gray-50/50">
             <h3 className="font-semibold text-lg mb-4">Add New Relationship</h3>
             
             <div className="space-y-4">
@@ -125,7 +124,7 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
                             setSearchTerm(`${p.firstName} ${p.lastName}`);
                             setShowDropdown(false);
                           }}
-                          className="w-full px-3 py-2 text-left hover:bg-gray-100 border-b last:border-b-0"
+                          className="w-full px-3 py-2 text-left hover:bg-gray-100 border-b last:border-b-0 cursor-pointer"
                         >
                           {p.firstName} {p.lastName}
                           {p.birthDate && (
@@ -161,7 +160,7 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
                   <button
                     onClick={handleAddRelationship}
                     disabled={!selectedPersonId}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium transition-colors duration-200 cursor-pointer shadow-sm hover:shadow-md"
                   >
                     Add
                   </button>
@@ -189,7 +188,7 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
                       </div>
                       <button
                         onClick={() => handleRemoveRelationship(parent.id)}
-                        className="text-red-600 hover:text-red-800 p-1"
+                        className="text-red-600 hover:text-red-800 p-1 cursor-pointer"
                         title="Remove"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,7 +218,7 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
                       </div>
                       <button
                         onClick={() => handleRemoveRelationship(spouse.id)}
-                        className="text-red-600 hover:text-red-800 p-1"
+                        className="text-red-600 hover:text-red-800 p-1 cursor-pointer"
                         title="Remove"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,7 +248,7 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
                       </div>
                       <button
                         onClick={() => handleRemoveRelationship(child.id)}
-                        className="text-red-600 hover:text-red-800 p-1"
+                        className="text-red-600 hover:text-red-800 p-1 cursor-pointer"
                         title="Remove"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,17 +264,16 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-gray-50 border-t">
+        <div className="p-6 bg-gray-50/50 border-t border-gray-100">
           <button
             onClick={handleClose}
-            className="w-full bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700"
+            className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors duration-200 font-medium shadow-sm hover:shadow-md cursor-pointer"
           >
             Done
           </button>
         </div>
       </div>
-    </div>
   );
 
-  return createPortal(modalContent, document.body);
+  return modalContent;
 };

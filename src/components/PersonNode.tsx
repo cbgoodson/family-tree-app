@@ -93,7 +93,7 @@ const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
           {onManageRelationships && (
             <button
               onClick={handleManageRelationships}
-              className="p-1 text-gray-400 hover:text-purple-500 hover:bg-purple-50 rounded-full flex-shrink-0"
+              className="p-1 text-gray-400 hover:text-purple-500 hover:bg-purple-50 rounded-full flex-shrink-0 cursor-pointer"
               title="Manage relationships"
             >
               <UsersIcon size={14} />
@@ -102,7 +102,7 @@ const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
           {onEdit && (
             <button
               onClick={handleEdit}
-              className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full flex-shrink-0"
+              className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full flex-shrink-0 cursor-pointer"
               title="Edit person"
             >
               <EditIcon size={14} />
