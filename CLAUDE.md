@@ -8,10 +8,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build` - Build the application for production (runs TypeScript check first)
 - `npm run lint` - Run ESLint to check code quality
 - `npm run preview` - Preview the production build locally
+- `npm run test` - Run all tests with Vitest
+- `npm run test -- --watch` - Run tests in watch mode
+- `npm run test -- src/context/FamilyContext.test.tsx` - Run specific test file
 
-## Code Quality
+## Code Quality & Testing
 
 Always run `npm run lint` after making changes to ensure code quality. The project uses ESLint with React-specific rules.
+
+### Testing Framework
+- **Test Runner**: Vitest with jsdom environment
+- **Testing Library**: React Testing Library with Jest DOM matchers
+- Tests are located alongside components (e.g., `FamilyContext.test.tsx`)
+- Tests mock localStorage via `storage.ts` utilities and ReactFlow components for DOM rendering
+- Focus on relationship management and graph visualization functionality
 
 ## Project Architecture
 
