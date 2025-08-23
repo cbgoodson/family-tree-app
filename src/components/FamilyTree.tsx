@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   ReactFlow,
   useNodesState,
@@ -148,8 +148,16 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
     return { nodes, edges };
   }, [people, focusPersonId, getPersonById]);
 
-  const [nodes, , onNodesChange] = useNodesState<Node<PersonNodeData>>(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<PersonNodeData>>(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  useEffect(() => {
+    setNodes(initialNodes);
+  }, [initialNodes, setNodes]);
+
+  useEffect(() => {
+    setEdges(initialEdges);
+  }, [initialEdges, setEdges]);
 
   const onInit = useCallback((instance: ReactFlowInstance<Node<PersonNodeData>, Edge>) => {
     setReactFlowInstance(instance);

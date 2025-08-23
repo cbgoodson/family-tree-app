@@ -31,12 +31,12 @@ const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
     }
   };
 
-  const calculateAge = (person: Person): string => {
-    if (!person.birthDate) return '';
-    const birth = new Date(person.birthDate);
-    const end = person.deathDate ? new Date(person.deathDate) : new Date();
+  const calculateAge = (p: Person): string => {
+    if (!p.birthDate) return '';
+    const birth = new Date(p.birthDate);
+    const end = p.deathDate ? new Date(p.deathDate) : new Date();
     const age = end.getFullYear() - birth.getFullYear();
-    return person.deathDate ? `(${age})` : `(${age})`;
+    return `(${age})`;
   };
 
   const age = calculateAge(person);
