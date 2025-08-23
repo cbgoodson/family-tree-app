@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         window.removeEventListener('editPerson', handleEditPersonEvent as EventListener);
         window.removeEventListener('manageRelationships', handleManageRelationshipsEvent as EventListener);
       };
-  }, []);
+  }, [onOpenRelationshipManager]);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);

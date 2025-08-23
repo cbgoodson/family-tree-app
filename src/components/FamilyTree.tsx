@@ -96,7 +96,7 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
     });
 
     // Create nodes for all people in generations map
-    generations.forEach((gen, personId) => {
+    generations.forEach((_gen, personId) => {
       const person = getPersonById(personId);
       if (!person) return;
 
@@ -119,7 +119,7 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
     });
 
     // Create edges only for people with relationships
-    generations.forEach((gen, personId) => {
+    generations.forEach((_gen, personId) => {
       const person = getPersonById(personId);
       if (!person) return;
 

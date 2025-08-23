@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FamilyProvider } from './context/FamilyContext';
 import { FamilyTree } from './components/FamilyTree';
-import { TimelineView } from './components/TimelineView';
+import TimelineView from './components/TimelineView';
 import Sidebar from './components/Sidebar';
 import { RelationshipManager } from './components/RelationshipManager';
 import type { Person } from './types/Person';
@@ -46,13 +46,13 @@ const FamilyTreeApp: React.FC = () => {
         <div className="p-2 flex justify-end gap-2 bg-white/70 backdrop-blur border-b">
           <button
             onClick={() => setViewMode('tree')}
-            className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'tree' ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+            className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'tree' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
           >
             Tree View
           </button>
           <button
             onClick={() => setViewMode('timeline')}
-            className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'timeline' ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+            className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'timeline' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
           >
             Timeline View
           </button>

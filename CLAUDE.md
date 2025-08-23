@@ -26,7 +26,7 @@ Always run `npm run lint` after making changes to ensure code quality. The proje
 
 ## Project Architecture
 
-This is a React TypeScript family tree web application built with Vite. The app helps users manage family relationships and visualize them in both grid and tree formats.
+This is a React TypeScript family tree web application built with Vite. The app helps users manage family relationships and visualize them in tree and timeline formats.
 
 ### Tech Stack
 - **Frontend**: React 19 with TypeScript
@@ -49,16 +49,17 @@ This is a React TypeScript family tree web application built with Vite. The app 
 - `src/components/SearchBar.tsx` - Real-time search functionality
 - `src/components/RelationshipManager.tsx` - Modal for managing family relationships
 - `src/components/FamilyTree.tsx` - Interactive tree visualization using ReactFlow
+- `src/components/TimelineView.tsx` - Chronological timeline view of family members
 
 #### Layout & Navigation
-- `src/App.tsx` - Main application component with sidebar and tree view
+- `src/App.tsx` - Main application component with sidebar and view mode switching (tree/timeline)
 - `src/components/Sidebar.tsx` - Collapsible sidebar with person management and search
 
 ### Key Features
 
 1. **Person Management**: Add, edit, delete family members with detailed info including gender and photos
 2. **Relationship Mapping**: Define parent-child, spouse relationships with automatic bidirectional updates
-3. **Interactive Tree Visualization**: Single tree view with ReactFlow for drag-and-drop interaction
+3. **Multiple Visualization Modes**: Interactive tree view with ReactFlow and chronological timeline view
 4. **Real-time Search**: Search people by name with live results in sidebar
 5. **Collapsible Sidebar**: Toggle sidebar visibility for better tree viewing experience
 6. **Local Storage**: All data persists in browser localStorage
