@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { FamilyProvider } from './context/FamilyContext';
 import { FamilyTree } from './components/FamilyTree';
+import { TimelineView } from './components/TimelineView';
 import Sidebar from './components/Sidebar';
 import { RelationshipManager } from './components/RelationshipManager';
 import type { Person } from './types/Person';
 
 const FamilyTreeApp: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [viewMode, setViewMode] = useState<'tree' | 'timeline'>('tree');
   const [relationshipPerson, setRelationshipPerson] = useState<Person | undefined>();
 
   const toggleSidebar = () => {
@@ -31,17 +33,33 @@ const FamilyTreeApp: React.FC = () => {
     };
   }, []);
 
-  return (
-    <div className="w-full h-screen bg-gray-50">
-      <Sidebar 
-        isOpen={sidebarOpen} 
+    return (
+    <div className="w-full h-screen">
+      <Sidebar
+        isOpen={sidebarOpen}
         toggleSidebar={toggleSidebar}
         onOpenRelationshipManager={(person: Person) => {
           setRelationshipPerson(person);
         }}
       />
-      <main className={`transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-0'} h-full`}>
-        <FamilyTree />
+      <main className={`transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-0'} h-full flex flex-col`}>
+        <div className="p-2 flex justify-end gap-2 bg-white/70 backdrop-blur border-b">
+          <button
+            onClick={() => setViewMode('tree')}
+            className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'tree' ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+          >
+            Tree View
+          </button>
+          <button
+            onClick={() => setViewMode('timeline')}
+            className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'timeline' ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+          >
+            Timeline View
+          </button>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          {viewMode === 'tree' ? <FamilyTree /> : <TimelineView />}
+        </div>
       </main>
 
       {/* RelationshipManager as full-screen modal */}
