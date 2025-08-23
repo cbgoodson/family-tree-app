@@ -23,18 +23,25 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const { people, addPerson, updatePerson } = useFamilyContext();
 
-  // Listen for edit person events from tree nodes
-    React.useEffect(() => {
-      const handleEditPersonEvent = (event: CustomEvent<Person>) => {
-        setEditingPerson(event.detail);
-        handleTabChange('add-person');
-      };
+  // Listen for custom events from tree nodes
+  React.useEffect(() => {
+    const handleEditPersonEvent = (event: CustomEvent<Person>) => {
+      setEditingPerson(event.detail);
+      handleTabChange('add-person');
+    };
 
-      window.addEventListener('editPerson', handleEditPersonEvent as EventListener);
+    const handleManageRelationshipsEvent = (event: CustomEvent<Person>) => {
+      setRelationshipPerson(event.detail);
+      handleTabChange('add-relationship');
+    };
 
-      return () => {
-        window.removeEventListener('editPerson', handleEditPersonEvent as EventListener);
-      };
+    window.addEventListener('editPerson', handleEditPersonEvent as EventListener);
+    window.addEventListener('manageRelationships', handleManageRelationshipsEvent as EventListener);
+
+    return () => {
+      window.removeEventListener('editPerson', handleEditPersonEvent as EventListener);
+      window.removeEventListener('manageRelationships', handleManageRelationshipsEvent as EventListener);
+    };
   }, []);
 
   const handleTabChange = (tab: TabType) => {

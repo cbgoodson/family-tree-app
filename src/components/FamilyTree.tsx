@@ -200,6 +200,8 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
 
   const handleReorganize = () => {
     if (reactFlowInstance) {
+      setNodes(initialNodes);
+      setEdges(initialEdges);
       setTimeout(() => {
         reactFlowInstance.fitView({ padding: 0.2 });
       }, 100);

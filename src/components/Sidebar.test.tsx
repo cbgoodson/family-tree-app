@@ -1,14 +1,15 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Sidebar from './Sidebar';
-import { FamilyProvider, useFamilyContext } from '../context/FamilyContext';
+import { FamilyProvider, useFamilyContext, type FamilyContextType } from '../context/FamilyContext';
 
+let ctx: FamilyContextType;
 const SidebarWrapper: React.FC = () => {
-  const { addPerson } = useFamilyContext();
+  ctx = useFamilyContext();
   React.useEffect(() => {
-    addPerson({ firstName: 'John', lastName: 'Doe', gender: 'male', parentIds: [], spouseIds: [], childrenIds: [] });
-  }, [addPerson]);
+    ctx.addPerson({ firstName: 'John', lastName: 'Doe', gender: 'male', parentIds: [], spouseIds: [], childrenIds: [] });
+  }, []);
   return <Sidebar isOpen={true} toggleSidebar={() => {}} />;
 };
 
@@ -32,5 +33,23 @@ describe('Sidebar tab toggling', () => {
     fireEvent.click(screen.getByText('People'));
     expect(screen.getByText('Family Members')).toBeInTheDocument();
     expect(screen.queryByLabelText('First Name *')).not.toBeInTheDocument();
+  });
+});
+
+describe('Relationship manager', () => {
+  it('opens when manageRelationships event is dispatched', async () => {
+    render(
+      <FamilyProvider>
+        <SidebarWrapper />
+      </FamilyProvider>
+    );
+
+    await waitFor(() => expect(ctx.people.length).toBeGreaterThan(0));
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('manageRelationships', { detail: ctx.people[0] }));
+    });
+
+    expect(await screen.findByText('Manage Relationships')).toBeInTheDocument();
   });
 });
