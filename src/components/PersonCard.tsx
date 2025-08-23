@@ -48,20 +48,20 @@ export const PersonCard: React.FC<PersonCardProps> = ({ person, onEdit, onViewRe
   const relationships = getRelationshipHighlights();
 
   return (
-    <div 
-      className={`
-        relative bg-gradient-to-br from-white to-gray-50 
-        rounded-2xl shadow-lg border-2 transition-all duration-300 
-        transform hover:scale-[1.02] hover:shadow-xl
-        ${person.deathDate 
-          ? 'border-gray-300 shadow-gray-200' 
-          : 'border-emerald-200 shadow-emerald-100 hover:border-emerald-300'
-        }
-        ${isHovered ? 'bg-gradient-to-br from-blue-50 to-white border-blue-300' : ''}
-      `}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+      <div
+        className={`
+          relative bg-gradient-to-br from-amber-50 to-orange-50
+          rounded-2xl shadow-lg border-2 transition-all duration-300
+          transform hover:scale-[1.02] hover:shadow-xl
+          ${person.deathDate
+            ? 'border-gray-300 shadow-gray-200'
+            : 'border-amber-300 shadow-amber-100 hover:border-amber-400'
+          }
+          ${isHovered ? 'bg-gradient-to-br from-orange-100 to-amber-50 border-orange-300' : ''}
+        `}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
       {/* Status indicator */}
       <div className={`
         absolute -top-2 -right-2 w-6 h-6 rounded-full border-4 border-white shadow-md
@@ -81,6 +81,15 @@ export const PersonCard: React.FC<PersonCardProps> = ({ person, onEdit, onViewRe
       `} />
 
       <div className="p-6">
+        {person.photo && (
+          <div className="mb-4 flex justify-center">
+            <img
+              src={person.photo}
+              alt={`${person.firstName} ${person.lastName}`}
+              className="w-32 h-32 rounded-full object-cover shadow-md transition-transform duration-300 hover:scale-105"
+            />
+          </div>
+        )}
         {/* Header with actions */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
