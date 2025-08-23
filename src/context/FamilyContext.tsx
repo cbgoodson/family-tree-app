@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, type ReactNode }
 import type { Person } from '../types/Person';
 import { loadPeople, savePeople, generateId } from '../utils/storage';
 
-interface FamilyContextType {
+export interface FamilyContextType {
   people: Person[];
   addPerson: (person: Omit<Person, 'id'>) => void;
   updatePerson: (id: string, updates: Partial<Person>) => void;

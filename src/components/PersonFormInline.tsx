@@ -210,13 +210,13 @@ export const PersonFormInline: React.FC<PersonFormInlineProps> = ({ person, onSu
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 text-sm rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-20 transition-colors font-medium"
+            className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 text-sm rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-20 transition-colors font-medium cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="flex-1 bg-blue-600 text-white py-2 px-3 text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20 transition-colors font-medium"
+            className="flex-1 bg-blue-600 text-white py-2 px-3 text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20 transition-colors font-medium cursor-pointer"
           >
             {person ? 'Update' : 'Add'}
           </button>

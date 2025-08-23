@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   ReactFlow,
   useNodesState,
@@ -69,6 +69,13 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
       calculateGeneration(people[0].id, 0);
     }
 
+    // Add any unconnected people to the tree
+    people.forEach(person => {
+      if (!generations.has(person.id)) {
+        generations.set(person.id, 0);
+      }
+    });
+
     const generationGroups = new Map<number, string[]>();
     generations.forEach((gen, personId) => {
       if (!generationGroups.has(gen)) {
@@ -88,7 +95,8 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
       });
     });
 
-    visited.forEach(personId => {
+    // Create nodes for all people in generations map
+    generations.forEach((gen, personId) => {
       const person = getPersonById(personId);
       if (!person) return;
 
@@ -108,9 +116,15 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
           },
         },
       });
+    });
+
+    // Create edges only for people with relationships
+    generations.forEach((gen, personId) => {
+      const person = getPersonById(personId);
+      if (!person) return;
 
       person.childrenIds.forEach(childId => {
-        if (visited.has(childId)) {
+        if (generations.has(childId)) {
           edges.push({
             id: `${personId}-${childId}`,
             source: personId,
@@ -127,7 +141,7 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
       });
 
       person.spouseIds.forEach(spouseId => {
-        if (visited.has(spouseId) && personId < spouseId) {
+        if (generations.has(spouseId) && personId < spouseId) {
           edges.push({
             id: `spouse-${personId}-${spouseId}`,
             source: personId,
@@ -148,8 +162,16 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
     return { nodes, edges };
   }, [people, focusPersonId, getPersonById]);
 
-  const [nodes, , onNodesChange] = useNodesState<Node<PersonNodeData>>(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<PersonNodeData>>(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  useEffect(() => {
+    setNodes(initialNodes);
+  }, [initialNodes, setNodes]);
+
+  useEffect(() => {
+    setEdges(initialEdges);
+  }, [initialEdges, setEdges]);
 
   const onInit = useCallback((instance: ReactFlowInstance<Node<PersonNodeData>, Edge>) => {
     setReactFlowInstance(instance);
@@ -178,6 +200,8 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
 
   const handleReorganize = () => {
     if (reactFlowInstance) {
+      // Force re-render of nodes with new positions by updating the nodes
+      setNodes(initialNodes);
       setTimeout(() => {
         reactFlowInstance.fitView({ padding: 0.2 });
       }, 100);
@@ -228,28 +252,28 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
         <Panel position="top-right" className="flex gap-2">
           <button 
             onClick={handleZoomIn} 
-            className="p-2 bg-white rounded-full shadow hover:bg-gray-100" 
+            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 cursor-pointer" 
             title="Zoom in"
           >
             <ZoomInIcon size={20} />
           </button>
           <button 
             onClick={handleZoomOut} 
-            className="p-2 bg-white rounded-full shadow hover:bg-gray-100" 
+            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 cursor-pointer" 
             title="Zoom out"
           >
             <ZoomOutIcon size={20} />
           </button>
           <button 
             onClick={handleFitView} 
-            className="p-2 bg-white rounded-full shadow hover:bg-gray-100" 
+            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 cursor-pointer" 
             title="Fit view"
           >
             <HomeIcon size={20} />
           </button>
           <button 
             onClick={handleReorganize} 
-            className="p-2 bg-white rounded-full shadow hover:bg-gray-100" 
+            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 cursor-pointer" 
             title="Reorganize tree"
           >
             <RefreshCwIcon size={20} />
