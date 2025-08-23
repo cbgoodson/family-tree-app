@@ -153,12 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         );
 
       case 'add-relationship':
-        return relationshipPerson ? (
-          <RelationshipManager
-            person={relationshipPerson}
-            onClose={() => handleTabChange('people')}
-          />
-        ) : (
+        return (
           <p className="text-sm text-gray-500">Select a person to manage relationships.</p>
         );
 
@@ -169,7 +164,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      <div className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-all duration-300 z-10 ${isOpen ? 'w-80' : 'w-0'} overflow-hidden`}>
+      <div className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-transform duration-300 z-40 w-80 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
           <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-800">Family Tree</h2>
@@ -218,11 +213,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Toggle button when sidebar is closed */}
       {!isOpen && (
         <button 
-          onClick={toggleSidebar} 
-          className="fixed top-4 left-4 z-10 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+          onClick={toggleSidebar}
+          className="fixed top-4 left-4 z-50 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 border border-gray-200"
         >
           <ChevronRightIcon size={20} />
         </button>
+      )}
+
+      {/* Render RelationshipManager as a separate modal outside sidebar */}
+      {relationshipPerson && (
+        <RelationshipManager
+          person={relationshipPerson}
+          onClose={() => handleTabChange('people')}
+        />
       )}
     </>
   );

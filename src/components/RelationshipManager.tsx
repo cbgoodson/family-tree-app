@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { Person } from '../types/Person';
 import { useFamilyContext } from '../context/FamilyContext';
 
@@ -71,7 +72,7 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
     setTimeout(onClose, 150);
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
       <div className={`bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden ${isAnimating ? 'scale-100 opacity-100' : 'scale-95 opacity-0'} transition-all duration-300`}>
         
@@ -275,4 +276,6 @@ export const RelationshipManager: React.FC<RelationshipManagerProps> = ({ person
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };

@@ -69,6 +69,13 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
       calculateGeneration(people[0].id, 0);
     }
 
+    // Add any unconnected people to the tree
+    people.forEach(person => {
+      if (!generations.has(person.id)) {
+        generations.set(person.id, 0);
+      }
+    });
+
     const generationGroups = new Map<number, string[]>();
     generations.forEach((gen, personId) => {
       if (!generationGroups.has(gen)) {
@@ -88,7 +95,8 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
       });
     });
 
-    visited.forEach(personId => {
+    // Create nodes for all people in generations map
+    generations.forEach((gen, personId) => {
       const person = getPersonById(personId);
       if (!person) return;
 
@@ -108,9 +116,15 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
           },
         },
       });
+    });
+
+    // Create edges only for people with relationships
+    generations.forEach((gen, personId) => {
+      const person = getPersonById(personId);
+      if (!person) return;
 
       person.childrenIds.forEach(childId => {
-        if (visited.has(childId)) {
+        if (generations.has(childId)) {
           edges.push({
             id: `${personId}-${childId}`,
             source: personId,
@@ -127,7 +141,7 @@ const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
       });
 
       person.spouseIds.forEach(spouseId => {
-        if (visited.has(spouseId) && personId < spouseId) {
+        if (generations.has(spouseId) && personId < spouseId) {
           edges.push({
             id: `spouse-${personId}-${spouseId}`,
             source: personId,
