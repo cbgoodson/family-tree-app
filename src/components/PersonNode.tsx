@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { EditIcon, UserIcon, UsersIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, Edit3, Users2 } from 'lucide-react';
 import type { Person } from '../types/Person';
 
 export interface PersonNodeData extends Record<string, unknown> {
   person: Person;
   onEdit?: (person: Person) => void;
   onManageRelationships?: (person: Person) => void;
+  onToggleCollapse?: (person: Person) => void;
 }
 
 interface PersonNodeProps {
@@ -14,110 +15,83 @@ interface PersonNodeProps {
   selected?: boolean;
 }
 
+function initialsOf(p: Person): string {
+  const parts = `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim().split(/\s+/);
+  return parts.slice(0, 2).map(s => s[0]?.toUpperCase() ?? '').join('');
+}
+
+function lifespan(p: Person): string | undefined {
+  const b = p.birthDate ? new Date(p.birthDate).getFullYear() : undefined;
+  const d = p.deathDate ? new Date(p.deathDate).getFullYear() : undefined;
+  if (!b && !d) return undefined;
+  if (b && !d) return `${b}–`;
+  if (!b && d) return `–${d}`;
+  return `${b}–${d}`;
+}
+
 const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
-  const { person, onEdit, onManageRelationships } = data;
+  const { person, onEdit, onManageRelationships, onToggleCollapse } = data;
+  const name = `${person.firstName} ${person.lastName}`.trim();
+  const life = lifespan(person);
+  const collapsed = !!person.ui?.collapsed;
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onEdit) {
-      onEdit(person);
-    }
-  };
-
-  const handleManageRelationships = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onManageRelationships) {
-      onManageRelationships(person);
-    }
-  };
-
-  const calculateAge = (p: Person): string => {
-    if (!p.birthDate) return '';
-    const birth = new Date(p.birthDate);
-    const end = p.deathDate ? new Date(p.deathDate) : new Date();
-    const age = end.getFullYear() - birth.getFullYear();
-    return `(${age})`;
-  };
-
-  const age = calculateAge(person);
-
-    const borderClasses = person.gender === 'female'
-      ? selected ? 'border-pink-500 shadow-pink-200' : 'border-pink-300 hover:border-pink-400'
-      : person.gender === 'male'
-        ? selected ? 'border-blue-500 shadow-blue-200' : 'border-blue-300 hover:border-blue-400'
-        : selected ? 'border-gray-500 shadow-gray-200' : 'border-gray-300 hover:border-gray-400';
-
-    const avatarClasses = person.gender === 'female'
-      ? 'bg-pink-100 text-pink-500'
-      : person.gender === 'male'
-        ? 'bg-blue-100 text-blue-500'
-        : 'bg-gray-100 text-gray-500';
-
-    return (
-      <div
-        className={`
-          bg-white border-2 rounded-xl p-3 shadow-lg min-w-[200px] max-w-[220px]
-          transition-all duration-200
-          ${borderClasses}
-          ${person.deathDate ? 'opacity-75' : ''}
-        `}
-      >
-      {/* Handles for connections */}
-      <Handle type="target" position={Position.Top} className="w-3 h-3" />
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
-      
-      <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${avatarClasses}`}>
-            <UserIcon size={20} />
+  return (
+    <div
+      tabIndex={0}
+      className={[
+        'rounded-2xl border shadow-sm bg-white/90 dark:bg-neutral-900/90',
+        'border-neutral-200 dark:border-neutral-800',
+        'w-[240px] focus:outline-none focus:ring-2 focus:ring-blue-400/60 focus:ring-offset-2',
+        selected ? 'ring-2 ring-blue-500/60' : ''
+      ].join(' ')}
+    >
+      {/* Top content */}
+      <div className="p-3 flex items-center gap-3">
+        {person.photo ? (
+          <img src={person.photo} alt={name} className="h-12 w-12 rounded-full object-cover" />
+        ) : (
+          <div className="h-12 w-12 rounded-full grid place-items-center bg-gradient-to-br from-slate-200 to-slate-300 dark:from-neutral-700 dark:to-neutral-800">
+            <span className="font-semibold text-neutral-800 dark:text-neutral-200">{initialsOf(person)}</span>
           </div>
-        
+        )}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm text-gray-900 truncate">
-            {person.firstName} {person.lastName}
-          </h3>
-          
-          {person.birthDate && (
-            <p className="text-xs text-gray-500">
-              b. {new Date(person.birthDate).getFullYear()} {age}
-            </p>
-          )}
-          
-          {person.deathDate && (
-            <p className="text-xs text-gray-500">
-              d. {new Date(person.deathDate).getFullYear()}
-            </p>
-          )}
+          <div className="truncate font-semibold text-neutral-900 dark:text-neutral-100">{name || 'Unnamed'}</div>
+          {life && <div className="text-xs opacity-70">{life}</div>}
+          {person.notes && <div className="text-[10px] opacity-70 line-clamp-1">{person.notes}</div>}
         </div>
-        
-        <div className="flex gap-1">
-          {onManageRelationships && (
-            <button
-              onClick={handleManageRelationships}
-              className="p-1 text-gray-400 hover:text-purple-500 hover:bg-purple-50 rounded-full flex-shrink-0 cursor-pointer"
-              title="Manage relationships"
-            >
-              <UsersIcon size={14} />
-            </button>
-          )}
-          {onEdit && (
-            <button
-              onClick={handleEdit}
-              className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full flex-shrink-0 cursor-pointer"
-              title="Edit person"
-            >
-              <EditIcon size={14} />
-            </button>
-          )}
-        </div>
+        <button
+          aria-label={collapsed ? 'Expand branch' : 'Collapse branch'}
+          onClick={() => onToggleCollapse?.(person)}
+          className="shrink-0 rounded-md border px-1.5 py-1 text-xs hover:bg-black/5 dark:hover:bg-white/5"
+          title={collapsed ? 'Expand branch' : 'Collapse branch'}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+        </button>
       </div>
-      
-      {person.notes && selected && (
-        <div className="mt-2 p-2 bg-blue-50 rounded-md">
-          <p className="text-xs text-blue-700 italic">{person.notes}</p>
-        </div>
-      )}
+
+      {/* Actions */}
+      <div className="px-3 pb-3 flex gap-2">
+        <button
+          onClick={() => onEdit?.(person)}
+          className="text-xs rounded-md border px-2 py-1 hover:bg-black/5 dark:hover:bg-white/5"
+          title="Edit person"
+        >
+          <Edit3 className="inline-block mr-1" size={14}/> Edit
+        </button>
+        <button
+          onClick={() => onManageRelationships?.(person)}
+          className="text-xs rounded-md border px-2 py-1 hover:bg-black/5 dark:hover:bg-white/5"
+          title="Manage relationships"
+        >
+          <Users2 className="inline-block mr-1" size={14}/> Relate
+        </button>
+      </div>
+
+      {/* Connection handles for edges */}
+      <Handle id="top" type="target" position={Position.Top} />
+      <Handle id="bottom" type="source" position={Position.Bottom} />
     </div>
   );
 };
 
-export default PersonNode;
+export default memo(PersonNode);

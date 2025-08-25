@@ -8,3 +8,29 @@
     color: #1f2937;
   }
 }
+
+/* === Wow UI tokens & dark mode === */
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --accent: #3b82f6; /* blue-500 */
+  --accent-2: #ec4899; /* pink-500 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0f14;
+    --card: #0f172a;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+  }
+}
+
+body {
+  background: radial-gradient(1000px 1000px at 10% -10%, rgba(59,130,246,0.08), transparent),
+              radial-gradient(1000px 1000px at 110% 10%, rgba(236,72,153,0.08), transparent),
+              var(--bg);
+  color: var(--text);
+}
