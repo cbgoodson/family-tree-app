@@ -34,30 +34,36 @@ const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
   const name = `${person.firstName} ${person.lastName}`.trim();
   const life = lifespan(person);
   const collapsed = !!person.ui?.collapsed;
+  const accent = person.gender === 'female' ? 'from-pink-300/60 to-pink-400/60'
+                : person.gender === 'male' ? 'from-blue-300/60 to-blue-400/60'
+                : 'from-slate-300/60 to-slate-400/60';
 
   return (
     <div
       tabIndex={0}
       className={[
-        'rounded-2xl border shadow-sm bg-white/90 dark:bg-neutral-900/90',
-        'border-neutral-200 dark:border-neutral-800',
-        'w-[240px] focus:outline-none focus:ring-2 focus:ring-blue-400/60 focus:ring-offset-2',
-        selected ? 'ring-2 ring-blue-500/60' : ''
+        'relative w-[260px] rounded-2xl border border-white/40 shadow-lg',
+        'bg-white/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur',
+        'focus:outline-none focus:ring-2 focus:ring-blue-400/60 focus:ring-offset-2',
+        'transition-all duration-200 hover:shadow-xl hover:ring-1 hover:ring-blue-200/60',
+        selected ? 'ring-2 ring-blue-400/60' : ''
       ].join(' ')}
     >
+      {/* Accent bar */}
+      <div className={`absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r ${accent}`} />
       {/* Top content */}
-      <div className="p-3 flex items-center gap-3">
+      <div className="p-3 pt-4 flex items-center gap-3">
         {person.photo ? (
-          <img src={person.photo} alt={name} className="h-12 w-12 rounded-full object-cover" />
+          <img src={person.photo} alt={name} className="h-12 w-12 rounded-full object-cover ring-2 ring-white/70" />
         ) : (
-          <div className="h-12 w-12 rounded-full grid place-items-center bg-gradient-to-br from-slate-200 to-slate-300 dark:from-neutral-700 dark:to-neutral-800">
-            <span className="font-semibold text-neutral-800 dark:text-neutral-200">{initialsOf(person)}</span>
+          <div className="h-12 w-12 rounded-full grid place-items-center ring-2 ring-white/70 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-neutral-700 dark:to-neutral-800">
+            <span className="font-semibold text-neutral-800 dark:text-neutral-200 select-none">{initialsOf(person)}</span>
           </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="truncate font-semibold text-neutral-900 dark:text-neutral-100">{name || 'Unnamed'}</div>
           {life && <div className="text-xs opacity-70">{life}</div>}
-          {person.notes && <div className="text-[10px] opacity-70 line-clamp-1">{person.notes}</div>}
+          {person.notes && <div className="text-[11px] opacity-70 line-clamp-2">{person.notes}</div>}
         </div>
         <button
           aria-label={collapsed ? 'Expand branch' : 'Collapse branch'}
@@ -73,17 +79,19 @@ const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
       <div className="px-3 pb-3 flex gap-2">
         <button
           onClick={() => onEdit?.(person)}
-          className="text-xs rounded-md border px-2 py-1 hover:bg-black/5 dark:hover:bg-white/5"
+          className="h-7 w-7 grid place-items-center rounded-md border text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
           title="Edit person"
+          aria-label="Edit person"
         >
-          <Edit3 className="inline-block mr-1" size={14}/> Edit
+          <Edit3 size={14}/>
         </button>
         <button
           onClick={() => onManageRelationships?.(person)}
-          className="text-xs rounded-md border px-2 py-1 hover:bg-black/5 dark:hover:bg-white/5"
+          className="h-7 w-7 grid place-items-center rounded-md border text-neutral-600 hover:text-pink-600 hover:bg-pink-50"
           title="Manage relationships"
+          aria-label="Manage relationships"
         >
-          <Users2 className="inline-block mr-1" size={14}/> Relate
+          <Users2 size={14}/>
         </button>
       </div>
 

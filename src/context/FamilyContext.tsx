@@ -74,22 +74,39 @@ export const FamilyProvider: React.FC<FamilyProviderProps> = ({ children }) => {
     if (personId === relatedPersonId) return;
 
     setPeople(prev => prev.map(person => {
+      // personId is the source, relatedPersonId is the target
       if (person.id === personId) {
-        if (type === 'parent' && !person.parentIds.includes(relatedPersonId)) {
-          return { ...person, parentIds: [...person.parentIds, relatedPersonId] };
-        } else if (type === 'spouse' && !person.spouseIds.includes(relatedPersonId)) {
-          return { ...person, spouseIds: [...person.spouseIds, relatedPersonId] };
-        } else if (type === 'child' && !person.childrenIds.includes(relatedPersonId)) {
-          return { ...person, childrenIds: [...person.childrenIds, relatedPersonId] };
+        if (type === 'parent') {
+          // person is the parent of related; add child to parent's childrenIds
+          if (!person.childrenIds.includes(relatedPersonId)) {
+            return { ...person, childrenIds: [...person.childrenIds, relatedPersonId] };
+          }
+        } else if (type === 'child') {
+          // person is the child of related; add parent to child's parentIds
+          if (!person.parentIds.includes(relatedPersonId)) {
+            return { ...person, parentIds: [...person.parentIds, relatedPersonId] };
+          }
+        } else if (type === 'spouse') {
+          if (!person.spouseIds.includes(relatedPersonId)) {
+            return { ...person, spouseIds: [...person.spouseIds, relatedPersonId] };
+          }
         }
       }
       if (person.id === relatedPersonId) {
-        if (type === 'parent' && !person.childrenIds.includes(personId)) {
-          return { ...person, childrenIds: [...person.childrenIds, personId] };
-        } else if (type === 'spouse' && !person.spouseIds.includes(personId)) {
-          return { ...person, spouseIds: [...person.spouseIds, personId] };
-        } else if (type === 'child' && !person.parentIds.includes(personId)) {
-          return { ...person, parentIds: [...person.parentIds, personId] };
+        if (type === 'parent') {
+          // related is the child; add parent to child's parentIds
+          if (!person.parentIds.includes(personId)) {
+            return { ...person, parentIds: [...person.parentIds, personId] };
+          }
+        } else if (type === 'child') {
+          // related is the parent; add child to parent's childrenIds
+          if (!person.childrenIds.includes(personId)) {
+            return { ...person, childrenIds: [...person.childrenIds, personId] };
+          }
+        } else if (type === 'spouse') {
+          if (!person.spouseIds.includes(personId)) {
+            return { ...person, spouseIds: [...person.spouseIds, personId] };
+          }
         }
       }
       return person;

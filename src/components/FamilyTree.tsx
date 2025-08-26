@@ -19,18 +19,24 @@ import CustomEdge from './CustomEdge';
 
 type FamilyTreeProps = {
   focusPersonId?: string;
+  sidebarOpen?: boolean;
 };
+
+const SpacerNode: React.FC<{ data: { width: number } }> = ({ data }) => (
+  <div style={{ width: data.width, height: 1, opacity: 0, pointerEvents: 'none' }} />
+);
 
 const nodeTypes = {
   personNode: PersonNode,
+  spacerNode: SpacerNode,
 };
 
 const edgeTypes = {
   customEdge: CustomEdge,
 };
 
-export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => {
-  const { people, getPersonById, updatePerson } = useFamilyContext();
+export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId, sidebarOpen }) => {
+  const { people, updatePerson } = useFamilyContext();
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance<Node<PersonNodeData>, Edge> | null>(null);
 
   // Build an index and helpers
@@ -134,8 +140,13 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => 
         position: pos,
         data: {
           person,
-          onEdit: () => document.dispatchEvent(new CustomEvent('editPerson', { detail: { personId } })),
-          onManageRelationships: () => document.dispatchEvent(new CustomEvent('manageRelationships', { detail: { personId } })),
+          onEdit: (p: Person) => {
+            // Use window target so listeners attached on window receive it
+            window.dispatchEvent(new CustomEvent<Person>('editPerson', { detail: p }));
+          },
+          onManageRelationships: (p: Person) => {
+            window.dispatchEvent(new CustomEvent<Person>('manageRelationships', { detail: p }));
+          },
           onToggleCollapse: () => {
             const current = !!person.ui?.collapsed;
             // Merge ui shallowly via updatePerson
@@ -144,6 +155,39 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => 
         },
       } as Node<PersonNodeData>);
     });
+
+    // Ensure isolated or cyclic nodes are still included: add any missing, unexcluded people at generation 0
+    people.forEach(p => {
+      if (!excluded.has(p.id) && !generations.has(p.id)) {
+        generations.set(p.id, 0);
+        const pos = { x: 0, y: (sortedGenerations.length) * 210 };
+        nodePositions.set(p.id, pos);
+        nodes.push({
+          id: p.id,
+          type: 'personNode',
+          position: pos,
+          data: {
+            person: p,
+            onEdit: (pp: Person) => window.dispatchEvent(new CustomEvent<Person>('editPerson', { detail: pp })),
+            onManageRelationships: (pp: Person) => window.dispatchEvent(new CustomEvent<Person>('manageRelationships', { detail: pp })),
+            onToggleCollapse: () => updatePerson(p.id, { ui: { collapsed: !p.ui?.collapsed } } as Partial<Person>),
+          },
+        } as Node<PersonNodeData>);
+      }
+    });
+
+    // Optionally inject a left gutter spacer when sidebar is open
+    const SAFE_LEFT = sidebarOpen ? 320 : 0; // px, matches sidebar width (w-80)
+    if (SAFE_LEFT > 0 && nodes.length) {
+      let minX = Infinity;
+      nodes.forEach(n => { if (n.position.x < minX) minX = n.position.x; });
+      nodes.push({
+        id: 'left-gutter',
+        type: 'spacerNode',
+        position: { x: minX - SAFE_LEFT, y: 0 },
+        data: { width: SAFE_LEFT },
+      } as unknown as Node<PersonNodeData>);
+    }
 
     // Edges (only if both nodes are included)
     people.forEach(person => {
@@ -175,7 +219,7 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => 
     });
 
     return { nodes, edges };
-  }, [people, focusPersonId, peopleById, excluded, updatePerson]);
+  }, [people, focusPersonId, peopleById, excluded, updatePerson, sidebarOpen]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<PersonNodeData>>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -189,6 +233,14 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => 
       return () => clearTimeout(t);
     }
   }, [initialNodes, initialEdges, reactFlowInstance, setNodes, setEdges]);
+
+  // Re-fit when sidebar toggles to avoid content beneath the sidebar
+  useEffect(() => {
+    if (reactFlowInstance) {
+      const t = setTimeout(() => reactFlowInstance.fitView({ padding: 0.25 }), 100);
+      return () => clearTimeout(t);
+    }
+  }, [sidebarOpen, reactFlowInstance]);
 
   const onInit = useCallback((instance: ReactFlowInstance<Node<PersonNodeData>, Edge>) => {
     setReactFlowInstance(instance);
@@ -205,6 +257,8 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => 
 
   return (
     <div className="relative w-full h-full">
+      {/* subtle canvas gradient for depth */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_50%_0%,rgba(59,130,246,0.06),transparent),radial-gradient(40%_30%_at_100%_30%,rgba(236,72,153,0.05),transparent)]" />
       <ReactFlow
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -212,9 +266,10 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => 
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onInit={onInit}
         fitView
       >
-        <Background variant="dots" gap={18} size={1} />
+        <Background gap={20} size={1} />
         <MiniMap pannable zoomable />
         <Controls showInteractive={false} />
         <Panel position="top-right" className="bg-white/80 dark:bg-neutral-900/80 rounded-md shadow p-2 space-x-2">
@@ -223,6 +278,22 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId }) => 
             onClick={() => reactFlowInstance?.fitView({ padding: 0.2 })}
           >
             Fit
+          </button>
+          <button
+            className="text-xs rounded border px-2 py-1 hover:bg-black/5 dark:hover:bg-white/5"
+            onClick={() => {
+              people.forEach(p => p.ui?.collapsed && updatePerson(p.id, { ui: { collapsed: false } } as Partial<Person>));
+            }}
+          >
+            Expand All
+          </button>
+          <button
+            className="text-xs rounded border px-2 py-1 hover:bg-black/5 dark:hover:bg-white/5"
+            onClick={() => {
+              people.forEach(p => (p.childrenIds?.length ?? 0) > 0 && updatePerson(p.id, { ui: { collapsed: true } } as Partial<Person>));
+            }}
+          >
+            Collapse All
           </button>
           {focusPersonId && (
             <button

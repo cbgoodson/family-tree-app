@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, UsersIcon, PlusIcon, UserPlusIcon, LinkIcon, EditIcon, TrashIcon } from 'lucide-react';
 import { PersonFormInline } from './PersonFormInline';
 import { useFamilyContext } from '../context/FamilyContext';
@@ -20,9 +20,18 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [activeTab, setActiveTab] = useState<TabType>('people');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | undefined>();
+  const [query, setQuery] = useState('');
   
 
   const { people, addPerson, updatePerson, deletePerson } = useFamilyContext();
+
+  const filteredPeople = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return people;
+    return people.filter(p =>
+      `${p.firstName} ${p.lastName}`.toLowerCase().includes(q)
+    );
+  }, [people, query]);
 
   // Listen for edit person events from tree nodes
     React.useEffect(() => {
@@ -104,11 +113,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       case 'people':
         return (
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">
-              Family Members
-            </h3>
+            <div className="sticky top-0 z-20 bg-white pb-2 pt-1">
+              <div className="relative overflow-hidden">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search people..."
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/60"
+                />
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-gray-500">Family Members</h3>
             <div className="space-y-1">
-              {people.map(person => {
+              {filteredPeople.map(person => {
                 const avatarClasses = person.gender === 'female'
                   ? 'bg-pink-100 text-pink-500'
                   : person.gender === 'male'
@@ -117,7 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 return (
                   <div
                     key={person.id}
-                    className={`p-2 rounded-md cursor-pointer flex items-center gap-3 ${selectedPerson?.id === person.id ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'}`}
+                    className={`p-2 rounded-lg cursor-pointer flex items-center gap-3 transition-colors ${selectedPerson?.id === person.id ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' : 'hover:bg-gray-100'}`}
                     onClick={() => setSelectedPerson(person)}
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${avatarClasses}`}>
@@ -134,14 +151,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <div className="flex gap-1">
                       <button
                         onClick={(e) => handleEditPerson(person, e)}
-                        className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full cursor-pointer"
+                        className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full cursor-pointer"
                         title="Edit person"
                       >
                         <EditIcon size={16} />
                       </button>
                       <button
                         onClick={(e) => handleDeletePerson(person, e)}
-                        className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full cursor-pointer"
+                        className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full cursor-pointer"
                         title="Delete person"
                       >
                         <TrashIcon size={16} />
@@ -228,41 +245,42 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex flex-col h-full">
           <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-800">Family Tree</h2>
-            <button onClick={toggleSidebar} className="p-1 rounded hover:bg-gray-200 cursor-pointer">
+            <button onClick={toggleSidebar} className="p-1 rounded hover:bg-gray-200 cursor-pointer" aria-label="Close sidebar">
               <ChevronLeftIcon size={20} />
             </button>
           </div>
-          
-          <div className="flex border-b border-gray-200">
-            <button
-              className={`flex-1 py-3 px-4 text-sm font-medium cursor-pointer ${activeTab === 'people' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => handleTabChange('people')}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <UsersIcon size={16} />
-                <span>People</span>
-              </div>
-            </button>
-            
-            <button
-              className={`flex-1 py-3 px-4 text-sm font-medium cursor-pointer ${activeTab === 'add-person' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={handleAddPersonTab}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <UserPlusIcon size={16} />
-                <span>Add Person</span>
-              </div>
-            </button>
-            
-            <button
-              className={`flex-1 py-3 px-4 text-sm font-medium cursor-pointer ${activeTab === 'add-relationship' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => handleTabChange('add-relationship')}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <LinkIcon size={16} />
-                <span>Relation</span>
-              </div>
-            </button>
+
+          {/* Segmented tabs */}
+          <div className="p-2 border-b border-gray-200 bg-white">
+            <div className="flex gap-1 bg-gray-100 rounded-full p-1">
+              <button
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-full cursor-pointer transition ${activeTab === 'people' ? 'bg-white shadow text-blue-700' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={() => handleTabChange('people')}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <UsersIcon size={16} />
+                  <span>People</span>
+                </div>
+              </button>
+              <button
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-full cursor-pointer transition ${activeTab === 'add-person' ? 'bg-white shadow text-blue-700' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={handleAddPersonTab}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <UserPlusIcon size={16} />
+                  <span>Add</span>
+                </div>
+              </button>
+              <button
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-full cursor-pointer transition ${activeTab === 'add-relationship' ? 'bg-white shadow text-blue-700' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={() => handleTabChange('add-relationship')}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <LinkIcon size={16} />
+                  <span>Relate</span>
+                </div>
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             {renderContent()}
