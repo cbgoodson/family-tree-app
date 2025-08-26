@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { ChevronDown, ChevronRight, Edit3, Users2 } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { Person } from '../types/Person';
 
 export interface PersonNodeData extends Record<string, unknown> {
@@ -30,7 +30,7 @@ function lifespan(p: Person): string | undefined {
 }
 
 const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
-  const { person, onEdit, onManageRelationships, onToggleCollapse } = data;
+  const { person, onEdit, onToggleCollapse } = data;
   const name = `${person.firstName} ${person.lastName}`.trim();
   const life = lifespan(person);
   const collapsed = !!person.ui?.collapsed;
@@ -75,25 +75,7 @@ const PersonNode: React.FC<PersonNodeProps> = ({ data, selected }) => {
         </button>
       </div>
 
-      {/* Actions */}
-      <div className="px-3 pb-3 flex gap-2">
-        <button
-          onClick={() => onEdit?.(person)}
-          className="h-7 w-7 grid place-items-center rounded-md border text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
-          title="Edit person"
-          aria-label="Edit person"
-        >
-          <Edit3 size={14}/>
-        </button>
-        <button
-          onClick={() => onManageRelationships?.(person)}
-          className="h-7 w-7 grid place-items-center rounded-md border text-neutral-600 hover:text-pink-600 hover:bg-pink-50"
-          title="Manage relationships"
-          aria-label="Manage relationships"
-        >
-          <Users2 size={14}/>
-        </button>
-      </div>
+      {/* No inline actions; double-click to edit */}
 
       {/* Connection handles for edges */}
       <Handle id="top" type="target" position={Position.Top} />

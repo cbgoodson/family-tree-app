@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   useNodesState,
@@ -10,7 +10,7 @@ import {
   MarkerType,
   ReactFlowProvider,
 } from '@xyflow/react';
-import type { Node, Edge, ReactFlowInstance } from '@xyflow/react';
+import type { Node, Edge, ReactFlowInstance, NodeMouseHandler } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { Person } from '../types/Person';
 import { useFamilyContext } from '../context/FamilyContext';
@@ -38,6 +38,7 @@ const edgeTypes = {
 export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId, sidebarOpen }) => {
   const { people, updatePerson } = useFamilyContext();
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance<Node<PersonNodeData>, Edge> | null>(null);
+  const preDragPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   // Build an index and helpers
   const peopleById = useMemo(() => {
@@ -256,7 +257,15 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId, sideb
   }, [reactFlowInstance, nodes, focusPersonId]);
 
   return (
-    <div className="relative w-full h-full">
+    <div
+      className="relative w-full h-full"
+      onDoubleClick={(e) => {
+        // If double-clicking a node, let node handler run
+        const t = e.target as HTMLElement;
+        if (t.closest('.react-flow__node')) return;
+        window.dispatchEvent(new CustomEvent('createPerson'));
+      }}
+    >
       {/* subtle canvas gradient for depth */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_50%_0%,rgba(59,130,246,0.06),transparent),radial-gradient(40%_30%_at_100%_30%,rgba(236,72,153,0.05),transparent)]" />
       <ReactFlow
@@ -267,6 +276,68 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId, sideb
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onInit={onInit}
+        onNodeDoubleClick={((_evt, node) => {
+          console.log('ReactFlow onNodeDoubleClick triggered for node:', node.id);
+          const p = peopleById.get(node.id);
+          if (p) {
+            console.log('Found person:', p.firstName, p.lastName);
+            console.log('Dispatching editPerson event');
+            window.dispatchEvent(new CustomEvent<Person>('editPerson', { detail: p }));
+            console.log('editPerson event dispatched');
+          } else {
+            console.log('Person not found for node:', node.id);
+          }
+        }) as NodeMouseHandler}
+        onNodeDragStart={() => {
+          const m = new Map<string, { x: number; y: number }>();
+          nodes.forEach(n => m.set(n.id, { ...n.position }));
+          preDragPositions.current = m;
+        }}
+        onNodeDragStop={(_e, node) => {
+          console.log('Drag stopped for node:', node.id, 'at position:', node.position);
+          
+          // Enhanced overlap detection with area calculation
+          const NODE_W = 260; const NODE_H = 150;
+          
+          // Calculate overlapping area with each other node
+          let bestTarget: { id: string; overlapArea: number } | null = null;
+          
+          for (const other of nodes) {
+            if (other.id === node.id) continue;
+            
+            // Calculate intersection rectangle
+            const left = Math.max(node.position.x, other.position.x);
+            const right = Math.min(node.position.x + NODE_W, other.position.x + NODE_W);
+            const top = Math.max(node.position.y, other.position.y);
+            const bottom = Math.min(node.position.y + NODE_H, other.position.y + NODE_H);
+            
+            // Check if there's actual overlap
+            if (left < right && top < bottom) {
+              const overlapArea = (right - left) * (bottom - top);
+              console.log(`Overlap with ${other.id}: ${overlapArea}px²`);
+              
+              // Keep track of the target with the most overlap
+              if (!bestTarget || overlapArea > bestTarget.overlapArea) {
+                bestTarget = { id: other.id, overlapArea };
+              }
+            }
+          }
+          
+          // Revert positions so cards don't stay stacked
+          const saved = preDragPositions.current;
+          if (saved.size) {
+            console.log('Reverting positions to original');
+            setNodes(nds => nds.map(n => saved.has(n.id) ? { ...n, position: saved.get(n.id)! } : n));
+          }
+          
+          // If we found a target with significant overlap, trigger relationship modal
+          if (bestTarget && bestTarget.overlapArea > 1000) { // Minimum overlap threshold
+            console.log(`Creating relationship between ${node.id} and ${bestTarget.id} (overlap: ${bestTarget.overlapArea}px²)`);
+            window.dispatchEvent(new CustomEvent('defineRelationship', { detail: { sourceId: node.id, targetId: bestTarget.id } }));
+          } else {
+            console.log('No significant overlap detected');
+          }
+        }}
         fitView
       >
         <Background gap={20} size={1} />
@@ -303,6 +374,16 @@ export const FamilyTreeFlow: React.FC<FamilyTreeProps> = ({ focusPersonId, sideb
               Focus
             </button>
           )}
+        </Panel>
+        <Panel position="bottom-right" className="bg-transparent shadow-none">
+          <button
+            title="Add person"
+            aria-label="Add person"
+            onClick={() => window.dispatchEvent(new CustomEvent('createPerson'))}
+            className="h-10 w-10 rounded-full bg-blue-600 text-white grid place-items-center shadow-lg hover:bg-blue-700"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+          </button>
         </Panel>
       </ReactFlow>
     </div>

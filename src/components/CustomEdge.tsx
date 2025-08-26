@@ -34,8 +34,8 @@ const CustomEdge: React.FC<CustomEdgeProps> = ({
   });
 
   const isSpouse = id.startsWith('spouse-');
-  const stroke = (style as any)?.stroke || (isSpouse ? '#ec4899' : '#60a5fa');
-  const strokeWidth = (style as any)?.strokeWidth || 2;
+  const stroke = (style as React.CSSProperties)?.stroke || (isSpouse ? '#ec4899' : '#60a5fa');
+  const strokeWidth = Number((style as React.CSSProperties)?.strokeWidth) || 2;
 
   return (
     <g className="group">

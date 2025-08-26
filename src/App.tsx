@@ -1,70 +1,81 @@
-import React, { useState } from 'react';
-import { FamilyProvider } from './context/FamilyContext';
+import React, { useEffect, useState } from 'react';
+import { FamilyProvider, useFamilyContext } from './context/FamilyContext';
 import { FamilyTree } from './components/FamilyTree';
-import Sidebar from './components/Sidebar';
-import { RelationshipManager } from './components/RelationshipManager';
 import type { Person } from './types/Person';
+import { PersonEditorOverlay } from './components/PersonEditorOverlay';
+import { RelationshipDefineModal } from './components/RelationshipDefineModal';
 
 const FamilyTreeApp: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [relationshipPerson, setRelationshipPerson] = useState<Person | undefined>();
+  const { addPerson, updatePerson } = useFamilyContext();
 
-  const toggleSidebar = () => {
-    setSidebarOpen(prev => !prev);
-  };
+  const [editorPerson, setEditorPerson] = useState<Person | undefined>();
+  const [showEditor, setShowEditor] = useState(false);
 
-  React.useEffect(() => {
-    const handleManageRelationships = (event: CustomEvent<Person>) => {
-      setRelationshipPerson(event.detail);
+  useEffect(() => {
+    const handleEditPerson = (event: CustomEvent<Person | undefined>) => {
+      console.log('App.tsx: editPerson event received:', event.detail);
+      setEditorPerson(event.detail);
+      setShowEditor(true);
+      console.log('App.tsx: showEditor set to true');
+    };
+    const handleCreatePerson = () => {
+      console.log('App.tsx: createPerson event received');
+      setEditorPerson(undefined);
+      setShowEditor(true);
+      console.log('App.tsx: showEditor set to true for new person');
     };
 
-    window.addEventListener('manageRelationships', handleManageRelationships as EventListener);
+    console.log('App.tsx: Adding event listeners for editPerson and createPerson');
+    window.addEventListener('editPerson', handleEditPerson as EventListener);
+    window.addEventListener('createPerson', handleCreatePerson as EventListener);
 
     return () => {
-      window.removeEventListener('manageRelationships', handleManageRelationships as EventListener);
+      console.log('App.tsx: Removing event listeners');
+      window.removeEventListener('editPerson', handleEditPerson as EventListener);
+      window.removeEventListener('createPerson', handleCreatePerson as EventListener);
     };
   }, []);
 
-    return (
+  const [pendingRelateIds, setPendingRelateIds] = useState<{ sourceId: string; targetId: string } | undefined>();
+  useEffect(() => {
+    const handler = (event: CustomEvent<{ sourceId: string; targetId: string }>) => {
+      setPendingRelateIds(event.detail);
+    };
+    window.addEventListener('defineRelationship', handler as EventListener);
+    return () => window.removeEventListener('defineRelationship', handler as EventListener);
+  }, []);
+
+  console.log('App.tsx: Rendering app, showEditor:', showEditor, 'editorPerson:', editorPerson);
+
+  return (
     <div className="w-full h-screen">
-      <Sidebar
-        isOpen={sidebarOpen}
-        toggleSidebar={toggleSidebar}
-        onOpenRelationshipManager={(person: Person) => {
-          setRelationshipPerson(person);
-        }}
-      />
-      <main className={`transition-all duration-300 ${sidebarOpen ? 'ml-80' : 'ml-0'} h-full flex flex-col`}>
+      <main className="h-full flex flex-col">
         <div className="flex-1 overflow-hidden">
-          <FamilyTree sidebarOpen={sidebarOpen} />
+          <FamilyTree />
         </div>
       </main>
 
-      {/* RelationshipManager as full-screen modal */}
-      {relationshipPerson && (
-        <div 
-          style={{ 
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 99999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px'
+      {showEditor && (
+        <PersonEditorOverlay
+          person={editorPerson}
+          onCancel={() => setShowEditor(false)}
+          onSubmit={(data) => {
+            if (editorPerson) {
+              updatePerson(editorPerson.id, data);
+            } else {
+              addPerson(data);
+            }
+            setShowEditor(false);
           }}
-          onClick={() => setRelationshipPerson(undefined)}
-        >
-          <div onClick={(e) => e.stopPropagation()}>
-            <RelationshipManager
-              person={relationshipPerson}
-              onClose={() => setRelationshipPerson(undefined)}
-            />
-          </div>
-        </div>
+        />
+      )}
+
+      {pendingRelateIds && (
+        <RelationshipDefineModal
+          sourceId={pendingRelateIds.sourceId}
+          targetId={pendingRelateIds.targetId}
+          onClose={() => setPendingRelateIds(undefined)}
+        />
       )}
     </div>
   );
